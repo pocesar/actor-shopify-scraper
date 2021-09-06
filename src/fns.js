@@ -61,6 +61,7 @@ const fromStartUrls = async function* (startUrls, name = 'INPUTURLS') {
  *  requestQueue: Apify.RequestQueue,
  *  sitemapUrls: string[],
  *  timeout?: number,
+ *  limit?: number,
  *  maxConcurrency?: number
  *  filter: (url: string) => boolean,
  *  map: (url: string) => Apify.RequestOptions,
@@ -70,6 +71,7 @@ const requestListFromSitemaps = async ({
     proxyConfiguration,
     filter,
     map,
+    limit = 0,
     requestQueue,
     timeout = 600,
     sitemapUrls,
@@ -108,15 +110,23 @@ const requestListFromSitemaps = async ({
 
             const $locations = $('url loc');
 
-            $locations.each((_, el) => {
+            for (const el of $locations) {
                 const url = cleanup($(el).text());
 
                 log.debug(`Found sitemap url`, { url });
 
                 if (filter(url)) {
-                    urls.add(map(url));
+                    const limited = limit > 0
+                        ? urls.size >= limit
+                        : false;
+
+                    if (!limited) {
+                        urls.add(map(url));
+                    } else {
+                        break;
+                    }
                 }
-            });
+            }
 
             // recursive sitemap
             for (const el of $('sitemap loc')) {

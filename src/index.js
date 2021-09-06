@@ -11,6 +11,7 @@ const entry = async () => {
         startUrls = [],
         maxConcurrency = 20,
         proxyConfig,
+        maxRequestsPerCrawl,
         maxRequestRetries = 3,
         debugLog = false,
         fetchHtml = false,
@@ -123,6 +124,8 @@ const entry = async () => {
     const requestList = await fns.requestListFromSitemaps({
         proxyConfiguration,
         requestQueue,
+        maxConcurrency,
+        limit: +maxRequestsPerCrawl,
         filter: (url) => {
             return /sitemap_products_\d+/.test(url)
                 || /\/products\//.test(url);
@@ -151,6 +154,9 @@ const entry = async () => {
         maxConcurrency,
         handlePageTimeoutSecs: 60,
         maxRequestRetries,
+        maxRequestsPerCrawl: +maxRequestsPerCrawl > 0
+            ? (+maxRequestsPerCrawl * (fetchHtml ? 2 : 1)) + await requestQueue.handledCount() // reusing the same request queue
+            : undefined,
         persistCookiesPerSession: false,
         preNavigationHooks: [async (crawlingContext, requestAsBrowserOptions) => {
             await extendScraperFunction(undefined, {
