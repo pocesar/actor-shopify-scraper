@@ -53,7 +53,6 @@
             "title": "Fetch HTML",
             "description": "If you decide to fetch the HTML of the pages, it will take twice as long. Make sure to only enable this if needed",
             "default": false,
-            "prefill": false,
             "editor": "checkbox",
             "type": "boolean"
         },
