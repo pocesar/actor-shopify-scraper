@@ -11,6 +11,7 @@ const entry = async () => {
         startUrls = [],
         maxConcurrency = 20,
         proxyConfig,
+        maxRequestRetries = 3,
         debugLog = false,
         fetchHtml = false,
     } = input;
@@ -149,7 +150,7 @@ const entry = async () => {
         useSessionPool: true,
         maxConcurrency,
         handlePageTimeoutSecs: 60,
-        maxRequestRetries: 6,
+        maxRequestRetries,
         persistCookiesPerSession: false,
         preNavigationHooks: [async (crawlingContext, requestAsBrowserOptions) => {
             await extendScraperFunction(undefined, {
