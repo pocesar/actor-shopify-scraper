@@ -1,0 +1,27 @@
+{
+	"name": "actor-shopify-scraper",
+	"version": "0.0.1",
+	"description": "Automate monitoring prices on the most popular solution for building online stores and selling products online. Crawl arbitrary Shopify-powered online stores and extract a list of all products in a structured form, including product title, price, description, etc.",
+	"dependencies": {
+		"apify": "^2.0.6",
+		"lodash": "^4.17.21",
+		"moment": "^2.29.1",
+        "got-scraping": "^3.2.2",
+        "cheerio": "^1.0.0-rc.10",
+		"string-strip-html": "^8.3.0"
+	},
+	"devDependencies": {
+		"@apify/eslint-config": "^0.1.4",
+		"eslint": "^7.32.0"
+	},
+	"scripts": {
+		"start": "node main.js",
+		"lint": "eslint ./src --ext .js,.jsx",
+		"lint:fix": "eslint ./src --ext .js,.jsx --fix"
+	},
+	"author": {
+		"name": "Paulo Cesar",
+		"url": "https://github.com/pocesar"
+	},
+	"license": "Apache-2.0"
+}

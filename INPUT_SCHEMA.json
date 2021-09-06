@@ -1,0 +1,85 @@
+{
+    "title": "Shopify scraper",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "startUrls": {
+            "title": "Start URLs",
+            "type": "array",
+            "description": "Provide Shopify shop URLs as the starting point",
+            "default": [],
+            "prefill": [],
+            "editor": "requestListSources"
+        },
+        "proxyConfig": {
+            "title": "Proxy configuration",
+            "type": "object",
+            "description": "It's required to use proxies when running on the platform.",
+            "prefill": {
+                "useApifyProxy": true
+            },
+            "default": {
+                "useApifyProxy": true
+            },
+            "editor": "proxy"
+        },
+        "extendOutputFunction": {
+            "title": "Extend Output Function",
+            "description": "Add or remove properties on the output object or omit the output returning null",
+            "type": "string",
+            "default": "async ({ data, item, product, images, fns, name, request, variants, context, customData, input, Apify }) => {\n  return item;\n}",
+            "prefill": "async ({ data, item, product, images, fns, name, request, variants, context, customData, input, Apify }) => {\n  return item;\n}",
+            "editor": "javascript",
+            "sectionCaption": "Extend scraper functionality",
+            "sectionDescription": "You can change the output of the items for your dataset here, or add additional behavior on the scraper."
+        },
+        "extendScraperFunction": {
+            "title": "Extend Scraper Function",
+            "description": "Advanced function that allows you to extend the default scraper functionality, allowing you to manually perform actions on the page",
+            "type": "string",
+            "default": "async ({ fns, customData, Apify, label }) => {\n \n}",
+            "prefill": "async ({ fns, customData, Apify, label }) => {\n \n}",
+            "editor": "javascript"
+        },
+        "customData": {
+            "title": "Custom data",
+            "description": "Any data that you want to have available inside the Extend Output/Scraper Function",
+            "default": {},
+            "prefill": {},
+            "type": "object",
+            "editor": "json"
+        },
+        "fetchHtml": {
+            "title": "Fetch HTML",
+            "description": "If you decide to fetch the HTML of the pages, it will take twice as long. Make sure to only enable this if needed",
+            "default": false,
+            "prefill": false,
+            "editor": "checkbox",
+            "type": "boolean"
+        },
+        "maxConcurrency": {
+            "title": "Max concurrency",
+            "description": "Max concurrency to use",
+            "default": 20,
+            "prefill": 20,
+            "type": "integer",
+            "editor": "number"
+        },
+        "maxRequestRetries": {
+            "title": "Max request retries",
+            "description": "Set the max request retries",
+            "default": 3,
+            "prefill": 3,
+            "type": "integer",
+            "editor": "number"
+        },
+        "debugLog": {
+            "title": "Debug Log",
+            "description": "Enable a more verbose logging to be able to understand what's happening during the scraping",
+            "type": "boolean",
+            "default": false,
+            "editor": "checkbox"
+        }
+    },
+    "required": []
+}
