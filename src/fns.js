@@ -1,8 +1,9 @@
-const Apify = require('apify');
-const { gotScraping } = require('got-scraping');
-const { load } = require('cheerio');
-const { stripHtml } = require('string-strip-html');
-const vm = require('vm');
+import Apify from 'apify';
+import { gotScraping } from 'got-scraping';
+import { load } from 'cheerio';
+import * as vm from 'vm';
+
+export { stripHtml } from 'string-strip-html';
 
 const { log } = Apify.utils;
 
@@ -11,7 +12,7 @@ const { log } = Apify.utils;
  *
  * @param {Apify.BasicCrawler} crawler
  */
-const patchLog = (crawler) => {
+export const patchLog = (crawler) => {
     const originalException = crawler.log.exception.bind(crawler.log);
     crawler.log.exception = (...args) => {
         if (!args?.[1]?.includes('handleRequestFunction')) {
@@ -32,7 +33,7 @@ const patchLog = (crawler) => {
  * @param {any[]} startUrls
  * @param {string} [name]
  */
-const fromStartUrls = async function* (startUrls, name = 'INPUTURLS') {
+export const fromStartUrls = async function* (startUrls, name = 'INPUTURLS') {
     const rl = await Apify.openRequestList(name, startUrls);
 
     /** @type {Apify.Request | null} */
@@ -67,7 +68,7 @@ const fromStartUrls = async function* (startUrls, name = 'INPUTURLS') {
  *  map: (url: string) => Apify.RequestOptions,
  * }} params
  */
-const requestListFromSitemaps = async ({
+export const requestListFromSitemaps = async ({
     proxyConfiguration,
     filter,
     map,
@@ -154,17 +155,17 @@ const requestListFromSitemaps = async ({
 /**
  * @param {Record<string, any>[]} arr
  */
-const mapIdsFromArray = (arr) => new Map([...arr].filter((s) => s).map((item) => ([item.id, item])));
+export const mapIdsFromArray = (arr) => new Map([...arr].filter((s) => s).map((item) => ([item.id, item])));
 
 /**
  * @param {any[]} arr
  */
-const uniqueNonEmptyArray = (arr) => [...new Set([...arr])].filter((s) => s);
+export const uniqueNonEmptyArray = (arr) => [...new Set([...arr])].filter((s) => s);
 
 /**
  * @param {string} url
  */
-const removeUrlQueryString = (url) => `${url}`.split('?', 2)[0];
+export const removeUrlQueryString = (url) => `${url}`.split('?', 2)[0];
 
 /**
  *
@@ -172,7 +173,7 @@ const removeUrlQueryString = (url) => `${url}`.split('?', 2)[0];
  * @param {Record<string, any>} product
  * @returns
  */
-const getVariantAttributes = (variant, product) => {
+export const getVariantAttributes = (variant, product) => {
     const { options } = product;
 
     if (/(Default|title)/i.test(`${options[0]?.name}`)) {
@@ -202,7 +203,7 @@ const getVariantAttributes = (variant, product) => {
  *   proxyConfiguration: Apify.ProxyConfiguration,
  * }} params
  */
-const checkForRobots = async ({ filteredSitemapUrls, startUrls, proxyConfiguration }) => {
+export const checkForRobots = async ({ filteredSitemapUrls, startUrls, proxyConfiguration }) => {
     for await (const { url } of fromStartUrls(startUrls)) {
         const baseUrl = new URL(url);
         baseUrl.pathname = '/robots.txt';
@@ -269,7 +270,7 @@ const checkForRobots = async ({ filteredSitemapUrls, startUrls, proxyConfigurati
  * @param {params} params
  * @returns {Promise<Apify.ProxyConfiguration | undefined>}
  */
-const proxyConfiguration = async ({
+export const proxyConfiguration = async ({
     proxyConfig,
     required = true,
     force = Apify.isAtHome(),
@@ -334,7 +335,7 @@ const proxyConfiguration = async ({
  * }} params
  * @return {Promise<(data: RAW, args?: Record<string, any>) => Promise<void>>}
  */
-const extendFunction = async ({
+export const extendFunction = async ({
     key,
     output,
     filter,
@@ -410,17 +411,4 @@ const extendFunction = async ({
             }
         }
     };
-};
-
-module.exports = {
-    requestListFromSitemaps,
-    mapIdsFromArray,
-    getVariantAttributes,
-    proxyConfiguration,
-    extendFunction,
-    stripHtml,
-    uniqueNonEmptyArray,
-    removeUrlQueryString,
-    checkForRobots,
-    patchLog,
 };

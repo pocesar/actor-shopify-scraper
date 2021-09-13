@@ -1,9 +1,11 @@
-const Apify = require('apify');
-const fns = require('./fns');
+import Apify from 'apify';
+
+import { load } from 'cheerio';
+import * as fns from './fns.js';
 
 const { log } = Apify.utils;
 
-const entry = async () => {
+export const entry = async () => {
     /** @type {any} */
     const input = await Apify.getInput();
 
@@ -194,6 +196,10 @@ const entry = async () => {
                 throw new Error('Missing product prop or title');
             }
 
+            context.$ = request.userData.body
+                ? load(request.userData.body, { decodeEntities: true })
+                : context.$;
+
             const url = request.url.replace('.json', '');
             const variants = fns.mapIdsFromArray(product.variants);
             const images = fns.mapIdsFromArray([...product.images, product.image]);
@@ -208,7 +214,7 @@ const entry = async () => {
                 url,
                 images,
                 imagesWithoutVariants,
-            }, context);
+            }, { context });
         },
         handleFailedRequestFunction: async ({ request, error }) => {
             log.exception(error, 'Failed all retries', { url: request.url });
@@ -238,5 +244,3 @@ const entry = async () => {
 
     await persistState();
 };
-
-module.exports = entry;
