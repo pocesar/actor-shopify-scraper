@@ -37,7 +37,7 @@ export const entry = async () => {
     const filteredSitemapUrls = new Set(await Apify.getValue('FILTERED') || []);
 
     const persistState = async () => {
-        await Apify.setValue('FILTERED', [...filteredSitemapUrls.entries()]);
+        await Apify.setValue('FILTERED', [...filteredSitemapUrls.values()]);
     };
 
     Apify.events.on('aborting', persistState);
@@ -56,21 +56,32 @@ export const entry = async () => {
                 return;
             }
 
+            const {
+                created_at,
+                updated_at,
+                published_at,
+                product_type,
+            } = product;
+
             return product.variants.map((variant) => {
                 const { name, props } = fns.getVariantAttributes(variant, product);
 
                 return {
                     url,
-                    color: props.color || null,
-                    size: props.size || null,
-                    material: props.material || null,
+                    color: props.color ?? null,
+                    size: props.size ?? null,
+                    material: props.material ?? null,
                     title: product.title,
                     id: `${product.id}`,
                     description: (product.body_html && fns.stripHtml(product.body_html)?.result) || null,
                     sku: `${variant.sku || variant.id}`,
-                    availability: variant.inventory_quantity > 0 ? 'in stock' : 'out of stock',
+                    // eslint-disable-next-line no-nested-ternary
+                    availability: 'inventory_quantity' in variant
+                        ? (variant.inventory_quantity > 0 ? 'in stock' : 'out of stock')
+                        : 'in stock',
                     price: +variant.price || null,
                     currency: 'USD',
+                    product_type,
                     images_urls: fns.uniqueNonEmptyArray([
                         images.get(variant.image_id)?.src,
                         imagesWithoutVariants,
@@ -78,21 +89,29 @@ export const entry = async () => {
                     ].flat().filter((s) => s).map(fns.removeUrlQueryString)),
                     brand: product.vendor,
                     video_urls: [],
+                    created_at: fns.safeIsoDate(props.created_at ?? created_at),
+                    updated_at: fns.safeIsoDate(props.updated_at ?? updated_at),
+                    published_at: fns.safeIsoDate(props.published_at ?? published_at),
                     additional: {
                         variant_attributes: name,
                         variant_title: variant.title,
-                        created_at: new Date(variant.created_at),
-                        updated_at: new Date(variant.updated_at),
                         scraped_at: new Date(),
                         barcode: variant.barcode || null,
                         taxcode: variant.taxcode || null,
-                        stock_count: variant.inventory_quantity,
+                        stock_count: variant.inventory_quantity ?? null,
                         tags: fns.uniqueNonEmptyArray((product.tags ?? '').split(/,\s*/g)),
                         weight: variant.weight ? `${variant.weight} ${variant.weight_unit}` : null,
                         requires_shipping: variant.requires_shipping || null,
                         ...Object.entries(props)
-                            .filter(([name]) => !['color', 'size', 'material'].includes(name))
-                            .reduce((out, [name, value]) => ({ ...out, [name]: value }), {}),
+                            .filter(([prop]) => ![
+                                'color',
+                                'size',
+                                'material',
+                                'created_at',
+                                'updated_at',
+                                'published_at',
+                            ].includes(prop))
+                            .reduce((out, [prop, value]) => ({ ...out, [prop]: value }), {}),
                     },
                 };
             });
@@ -128,9 +147,33 @@ export const entry = async () => {
         requestQueue,
         maxConcurrency,
         limit: +maxRequestsPerCrawl,
-        filter: (url) => {
-            return /sitemap_products_\d+/.test(url)
-                || /\/products\//.test(url);
+        filter: async (url) => {
+            const isProduct = /\/products\//.test(url);
+            const isSitemap = /sitemap_products_\d+/.test(url);
+
+            if (isSitemap) {
+                return true;
+            }
+
+            if (!isProduct) {
+                return false;
+            }
+
+            /** @type {boolean} */
+            let filtered = isProduct;
+
+            /** @param {boolean} result */
+            const filter = (result) => {
+                filtered = filtered && result;
+            };
+
+            await extendScraperFunction(undefined, {
+                url,
+                filter,
+                label: 'FILTER_SITEMAP_URL',
+            });
+
+            return filtered;
         },
         map: (url) => {
             return {

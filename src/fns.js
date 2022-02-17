@@ -8,6 +8,27 @@ export { stripHtml } from 'string-strip-html';
 const { log } = Apify.utils;
 
 /**
+ * @param {string} date
+ */
+export const safeIsoDate = (date) => {
+    try {
+        return new Date(date).toISOString();
+    } catch (e) {
+        return null;
+    }
+};
+
+/**
+ *
+ * @param {*} url
+ */
+export const categorizeUrl = (url) => {
+    if (!url) {
+        throw new Error('Found empty url');
+    }
+};
+
+/**
  * Monkey-patch the handleRequestFunction failed... error
  *
  * @param {Apify.BasicCrawler} crawler
@@ -64,7 +85,7 @@ export const fromStartUrls = async function* (startUrls, name = 'INPUTURLS') {
  *  timeout?: number,
  *  limit?: number,
  *  maxConcurrency?: number
- *  filter: (url: string) => boolean,
+ *  filter: (url: string) => Promise<boolean>,
  *  map: (url: string) => Apify.RequestOptions,
  * }} params
  */
@@ -116,7 +137,7 @@ export const requestListFromSitemaps = async ({
 
                 log.debug(`Found sitemap url`, { url });
 
-                if (filter(url)) {
+                if (await filter(url)) {
                     const limited = limit > 0
                         ? urls.size >= limit
                         : false;
@@ -133,7 +154,7 @@ export const requestListFromSitemaps = async ({
             for (const el of $('sitemap loc')) {
                 const url = cleanup($(el).text());
 
-                if (filter(url)) {
+                if (await filter(url)) {
                     log.debug(`Found subsitemap url`, { url });
 
                     await requestQueue.addRequest({
@@ -171,7 +192,7 @@ export const removeUrlQueryString = (url) => `${url}`.split('?', 2)[0];
  *
  * @param {Record<string, any>} variant
  * @param {Record<string, any>} product
- * @returns
+ * @returns {{ name: string, props: Record<string, any> }}
  */
 export const getVariantAttributes = (variant, product) => {
     const { options } = product;
@@ -207,6 +228,9 @@ export const checkForRobots = async ({ filteredSitemapUrls, startUrls, proxyConf
     for await (const { url } of fromStartUrls(startUrls)) {
         const baseUrl = new URL(url);
         baseUrl.pathname = '/robots.txt';
+        baseUrl.searchParams.forEach((key) => {
+            baseUrl.searchParams.delete(key);
+        });
 
         try {
             const response = await gotScraping({
