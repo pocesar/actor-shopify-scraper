@@ -8,7 +8,7 @@
             "type": "array",
             "description": "Provide Shopify shop URLs as the starting point",
             "default": [],
-            "prefill": [],
+            "prefill": [{"url": "https://www.decathlon.com/collections/tents"}],
             "editor": "requestListSources"
         },
         "maxRequestsPerCrawl": {
