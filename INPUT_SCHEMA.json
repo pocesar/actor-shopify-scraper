@@ -15,7 +15,7 @@
             "title": "Max items",
             "description": "Maximum number of items to scrape. Set it to 0 to scrape everything.",
             "default": 0,
-            "prefill": 0,
+            "prefill": 100,
             "type": "integer",
             "editor": "number"
         },
