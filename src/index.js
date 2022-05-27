@@ -12,9 +12,9 @@ export const entry = async () => {
     const {
         startUrls = [],
         maxConcurrency = 20,
-        proxyConfig,
         maxRequestsPerCrawl,
         maxRequestRetries = 3,
+        proxyConfig,
         debugLog = false,
         fetchHtml = false,
     } = input;
@@ -180,9 +180,9 @@ export const entry = async () => {
                 url: fetchHtml ? url : `${url}.json`,
                 userData: {
                     url,
-                    label: !fetchHtml
-                        ? 'JSON'
-                        : 'HTML',
+                    label: fetchHtml
+                        ? 'HTML'
+                        : 'JSON',
                 },
             };
         },
@@ -198,6 +198,12 @@ export const entry = async () => {
         useSessionPool: true,
         maxConcurrency,
         handlePageTimeoutSecs: 60,
+        ignoreSslErrors: true,
+        sessionPoolOptions: {
+            sessionOptions: {
+                maxErrorScore: 0.5,
+            },
+        },
         maxRequestRetries,
         maxRequestsPerCrawl: +maxRequestsPerCrawl > 0
             ? (+maxRequestsPerCrawl * (fetchHtml ? 2 : 1)) + await requestQueue.handledCount() // reusing the same request queue

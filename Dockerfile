@@ -5,7 +5,7 @@ COPY package*.json ./
 RUN npm --quiet set progress=false \
  && npm install --only=prod --no-optional \
  && echo "Installed NPM packages:" \
- && (npm list || true) \
+ && (npm list --only=prod --no-optional --all || true) \
  && echo "Node.js version:" \
  && node --version \
  && echo "NPM version:" \
@@ -13,3 +13,5 @@ RUN npm --quiet set progress=false \
 
 COPY . ./
 
+ENV APIFY_DISABLE_OUTDATED_WARNING 1
+ENV npm_config_loglevel=silent

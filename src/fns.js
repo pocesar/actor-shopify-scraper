@@ -95,7 +95,7 @@ export const requestListFromSitemaps = async ({
     map,
     limit = 0,
     requestQueue,
-    timeout = 600,
+    timeout = 300,
     sitemapUrls,
     maxConcurrency = 1,
 }) => {
@@ -114,12 +114,20 @@ export const requestListFromSitemaps = async ({
         handleRequestTimeoutSecs: timeout,
         sessionPoolOptions: {
             persistStateKey: 'SITEMAPS_SESSION_POOL',
+            sessionOptions: {
+                maxErrorScore: 0.5,
+            },
         },
-        maxRequestRetries: 10,
+        maxRequestRetries: 5,
         handleRequestFunction: async ({ request, session }) => {
             const response = await gotScraping({
                 url: request.url,
                 proxyUrl: proxyConfiguration?.newUrl(session.id),
+                timeout: {
+                    response: 10000,
+                    request: 5000,
+                },
+                retry: { limit: 0 },
             });
 
             if (![200, 301, 302].includes(response.statusCode)) {
@@ -235,8 +243,12 @@ export const checkForRobots = async ({ filteredSitemapUrls, startUrls, proxyConf
         try {
             const response = await gotScraping({
                 url: baseUrl.toString(),
+                timeout: {
+                    response: 20000,
+                    request: 10000,
+                },
                 proxyUrl: proxyConfiguration?.newUrl(`s${Math.random()}`.replace(/[^\s\w]+/g, '')),
-                retry: { limit: 3, maxRetryAfter: 0 },
+                retry: { limit: 3 },
             });
 
             if (![200, 301, 302].includes(response.statusCode)) {
@@ -416,7 +428,7 @@ export const extendFunction = async ({
 
         for (const item of await splitMap(data, merged)) {
             if (filter && !(await filter({ data, item }, merged))) {
-                continue; // eslint-disable-line no-continue
+                continue;
             }
 
             const result = await (evaledFn.runInThisContext()({

@@ -4,16 +4,16 @@
     "type": "module",
     "description": "Automate monitoring prices on the most popular solution for building online stores and selling products online. Crawl arbitrary Shopify-powered online stores and extract a list of all products in a structured form, including product title, price, description, etc.",
     "dependencies": {
-        "apify": "^2.2.2",
+        "apify": "^2.3.2",
         "lodash": "^4.17.21",
-        "moment": "^2.29.1",
-        "got-scraping": "^3.2.8",
+        "moment": "^2.29.3",
+        "got-scraping": "^3.2.9",
         "cheerio": "^1.0.0-rc.10",
-        "string-strip-html": "^9.1.6"
+        "string-strip-html": "^9.1.12"
     },
     "devDependencies": {
-        "@apify/eslint-config": "^0.2.2",
-        "eslint": "^8.9.0"
+        "@apify/eslint-config": "^0.3.1",
+        "eslint": "^8.16.0"
     },
     "scripts": {
         "start": "node main.js",

@@ -8,28 +8,27 @@
             "type": "array",
             "description": "Provide Shopify shop URLs as the starting point",
             "default": [],
-            "prefill": [],
+            "prefill": [
+                { "url": "https://kyliecosmetics.com/en-us" }
+            ],
             "editor": "requestListSources"
         },
         "maxRequestsPerCrawl": {
             "title": "Max items",
             "description": "Maximum number of items to scrape. Set it to 0 to scrape everything.",
-            "default": 0,
-            "prefill": 0,
+            "default": 10,
+            "prefill": 10,
             "type": "integer",
             "editor": "number"
         },
         "proxyConfig": {
-            "title": "Proxy configuration",
+            "title": "Proxy Configuration",
             "type": "object",
-            "description": "It's required to use proxies when running on the platform.",
-            "prefill": {
-                "useApifyProxy": true
-            },
-            "default": {
-                "useApifyProxy": true
-            },
-            "editor": "proxy"
+            "description": "Use either automatic Apify proxies, Residentials or your own.",
+            "prefill": { "useApifyProxy": true },
+            "default": { "useApifyProxy": true },
+            "editor": "proxy",
+            "sectionCaption": "Advanced options (proxy configuration, extend output, debug mode)"
         },
         "extendOutputFunction": {
             "title": "Extend Output Function",
@@ -67,8 +66,8 @@
         "maxConcurrency": {
             "title": "Max concurrency",
             "description": "Max concurrency to use",
-            "default": 20,
-            "prefill": 20,
+            "default": 10,
+            "prefill": 10,
             "type": "integer",
             "editor": "number"
         },
