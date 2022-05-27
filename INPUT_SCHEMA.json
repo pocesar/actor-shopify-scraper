@@ -9,7 +9,7 @@
             "description": "Provide Shopify shop URLs as the starting point",
             "default": [],
             "prefill": [
-                { "url": "https://kyliecosmetics.com/en-us" }
+                { "url": "https://www.decathlon.com" }
             ],
             "editor": "requestListSources"
         },
