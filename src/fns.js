@@ -245,10 +245,10 @@ export const checkForRobots = async ({ filteredSitemapUrls, startUrls, proxyConf
                 url: baseUrl.toString(),
                 timeout: {
                     response: 20000,
-                    request: 10000,
+                    request: 17000,
                 },
-                proxyUrl: proxyConfiguration?.newUrl(`s${Math.random()}`.replace(/[^\s\w]+/g, '')),
-                retry: { limit: 3 },
+                proxyUrl: proxyConfiguration?.newUrl(`${Math.random()*10000}`.replace('.', '')),
+                retry: { limit: 0 },
             });
 
             if (![200, 301, 302].includes(response.statusCode)) {
