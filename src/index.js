@@ -17,6 +17,7 @@ export const entry = async () => {
         proxyConfig,
         debugLog = false,
         fetchHtml = false,
+        checkForBanner = true,
     } = input;
 
     if (debugLog) {
@@ -47,6 +48,7 @@ export const entry = async () => {
         startUrls,
         proxyConfiguration,
         filteredSitemapUrls,
+        checkForBanner,
     });
 
     const extendOutputFunction = await fns.extendFunction({
@@ -56,29 +58,34 @@ export const entry = async () => {
                 return;
             }
 
-            const {
-                created_at,
-                updated_at,
-                published_at,
-                product_type,
-            } = product;
+            const created_at = fns.coalesceProps([product], ['created_at', 'createdAt']);
+            const updated_at = fns.coalesceProps([product], ['updated_at', 'updatedAt']);
+            const published_at = fns.coalesceProps([product], ['published_at', 'publishedAt']);
+            const product_type = fns.coalesceProps([product], ['product_type', 'productType']);
 
             return product.variants.map((variant) => {
                 const { name, props } = fns.getVariantAttributes(variant, product);
+                const description = fns.coalesceProps([product], ['body_html', 'descriptionHtml', 'description']);
+                const stock_count = fns.coalesceProps([variant], ['inventoryQuantity', 'inventory_quantity']);
+                const availableForSale = fns.coalesceProps([variant], ['availableForSale', 'available_for_sale']);
+                const weight_unit = fns.coalesceProps([variant], ['weight_unit', 'weightUnit']);
+                const requires_shipping = fns.coalesceProps([variant], ['requiresShipping', 'requires_shipping']);
+                const display_name = fns.coalesceProps([variant], ['displayName', 'display_name']);
 
                 return {
                     url,
                     color: props.color ?? null,
                     size: props.size ?? null,
                     material: props.material ?? null,
+                    display_name: display_name ?? null,
                     title: product.title,
-                    id: `${product.id}`,
-                    description: (product.body_html && fns.stripHtml(product.body_html)?.result) || null,
-                    sku: `${variant.sku || variant.id}`,
+                    id: `${fns.removeGuid(product.id)}`,
+                    description: (description && fns.stripHtml(description)?.result) || null,
+                    sku: `${variant.sku || fns.removeGuid(variant.id)}`,
                     // eslint-disable-next-line no-nested-ternary
-                    availability: 'inventory_quantity' in variant
-                        ? (variant.inventory_quantity > 0 ? 'in stock' : 'out of stock')
-                        : 'in stock',
+                    availability: +stock_count
+                        ? (stock_count > 0 ? 'in stock' : 'out of stock')
+                        : availableForSale ? 'in stock' : 'out of stock',
                     price: +variant.price || null,
                     currency: 'USD',
                     product_type,
@@ -98,10 +105,10 @@ export const entry = async () => {
                         scraped_at: new Date(),
                         barcode: variant.barcode || null,
                         taxcode: variant.taxcode || null,
-                        stock_count: variant.inventory_quantity ?? null,
-                        tags: fns.uniqueNonEmptyArray((product.tags ?? '').split(/,\s*/g)),
-                        weight: variant.weight ? `${variant.weight} ${variant.weight_unit}` : null,
-                        requires_shipping: variant.requires_shipping || null,
+                        stock_count: stock_count ?? null,
+                        tags: fns.uniqueNonEmptyArray(Array.isArray(product.tags) ? product.tags : (product.tags ?? '').split(/,\s*/g)),
+                        weight: variant.weight ? `${variant.weight} ${weight_unit}` : null,
+                        requires_shipping: requires_shipping || null,
                         ...Object.entries(props)
                             .filter(([prop]) => ![
                                 'color',
@@ -170,6 +177,8 @@ export const entry = async () => {
             await extendScraperFunction(undefined, {
                 url,
                 filter,
+                isSitemap,
+                isProduct,
                 label: 'FILTER_SITEMAP_URL',
             });
 
@@ -223,7 +232,7 @@ export const entry = async () => {
             });
         }],
         handlePageFunction: async (context) => {
-            const { json, request } = context;
+            const { json, request, response } = context;
 
             log.debug(`Scraping ${request.url}`);
 
@@ -239,11 +248,23 @@ export const entry = async () => {
                 return;
             }
 
-            const { product } = json;
+            if (!json?.product?.title) {
+                if (!json?.title) {
+                    // this is the last resort
+                    if (debugLog) {
+                        const kvFriendlyNameUrl = new URL(request.url);
+                        await Apify.setValue(kvFriendlyNameUrl.pathname.replace(/[^a-z\-.0-9]/gi, '').slice(0, 100), json);
+                    }
 
-            if (!product || !product.title) {
-                throw new Error('Missing product prop or title');
+                    if (response.statusCode !== 404) {
+                        throw new Error('Missing product prop or title');
+                    }
+
+                    return;
+                }
             }
+
+            const product = json.product ?? json;
 
             context.$ = request.userData.body
                 ? load(request.userData.body, { decodeEntities: true })

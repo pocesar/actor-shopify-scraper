@@ -35,6 +35,11 @@ async ({ label, url, filter, fns, filteredSitemapUrls, customData }) => {
         case 'SETUP': {
             // filteredSitemapUrls is a `Set` instance and can be edited in-place
             filteredSitemapUrls.add('https://example.com/secret-unlisted-sitemap.xml');
+            filteredSitemapUrls.forEach((sitemapURL) => {
+                if (!sitemapURL.includes('en-us')) {
+                    filteredSitemapUrls.delete(sitemapURL);
+                }
+            });
             break;
         }
     }

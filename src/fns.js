@@ -8,6 +8,40 @@ export { stripHtml } from 'string-strip-html';
 const { log } = Apify.utils;
 
 /**
+ * Remove the GUID from the string if present
+ *
+ * @param {string} str
+ */
+export const removeGuid = (str) => {
+    return +`${str}`.replace(/^gid:\/\/shopify\/[^/]+\//, '');
+};
+
+/**
+ * Finds the first existing value (falsy or not) in the base object.
+ *
+ * @param {Array<Record<string, any>>} bases
+ * @param {string[]} props
+ */
+export const coalesceProps = (bases, props) => {
+    for (const prop of props) {
+        for (const base of bases) {
+            if (prop in base) {
+                return base[prop];
+            }
+        }
+    }
+};
+
+/**
+ * Convert the property name to a snake_case format for consistency
+ *
+ * @param {string} str
+ */
+export const toSnakeCase = (str) => {
+    return str.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+};
+
+/**
  * @param {string} date
  */
 export const safeIsoDate = (date) => {
@@ -184,7 +218,7 @@ export const requestListFromSitemaps = async ({
 /**
  * @param {Record<string, any>[]} arr
  */
-export const mapIdsFromArray = (arr) => new Map([...arr].filter((s) => s).map((item) => ([item.id, item])));
+export const mapIdsFromArray = (arr) => new Map([...arr].filter((s) => s).map((item) => ([removeGuid(item.id), item])));
 
 /**
  * @param {any[]} arr
@@ -205,7 +239,7 @@ export const removeUrlQueryString = (url) => `${url}`.split('?', 2)[0];
 export const getVariantAttributes = (variant, product) => {
     const { options } = product;
 
-    if (/(Default|title)/i.test(`${options[0]?.name}`)) {
+    if (/(Default|title)/i.test(`${options?.[0]?.name}`)) {
         return { name: 'Default', props: {} };
     }
 
@@ -214,8 +248,8 @@ export const getVariantAttributes = (variant, product) => {
 
     for (let i = 0; i < options.length; i++) {
         const prop = `option${i + 1}`;
-        if (variant[prop]) {
-            props[options[i].name.toLowerCase()] = variant[prop];
+        if (prop in variant) {
+            props[toSnakeCase(options[i].name)] = variant[prop];
             name.push(`${options[i].name}: ${variant[prop]}`);
         }
     }
@@ -230,9 +264,10 @@ export const getVariantAttributes = (variant, product) => {
  *   filteredSitemapUrls: Set<string>,
  *   startUrls: Apify.RequestOptions[],
  *   proxyConfiguration: Apify.ProxyConfiguration,
+ *   checkForBanner: boolean
  * }} params
  */
-export const checkForRobots = async ({ filteredSitemapUrls, startUrls, proxyConfiguration }) => {
+export const checkForRobots = async ({ checkForBanner = true, filteredSitemapUrls, startUrls, proxyConfiguration }) => {
     for await (const { url } of fromStartUrls(startUrls)) {
         const baseUrl = new URL(url);
         baseUrl.pathname = '/robots.txt';
@@ -261,7 +296,7 @@ export const checkForRobots = async ({ filteredSitemapUrls, startUrls, proxyConf
                 throw new Error('Body is empty');
             }
 
-            if (!body.includes('Shopify')) {
+            if (checkForBanner && !body.includes('Shopify')) {
                 throw new Error('Not a Shopify URL');
             }
 

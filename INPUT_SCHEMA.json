@@ -30,6 +30,13 @@
             "editor": "proxy",
             "sectionCaption": "Advanced options (proxy configuration, extend output, debug mode)"
         },
+        "checkForBanner": {
+            "title": "Check for Shopify on robots",
+            "description": "Ensure that the remote robots.txt file contains the Shopify keyword.",
+            "editor": "checkbox",
+            "default": true,
+            "type": "boolean"
+        },
         "extendOutputFunction": {
             "title": "Extend Output Function",
             "description": "Add or remove properties on the output object or omit the output returning null",
